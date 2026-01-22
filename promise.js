@@ -58,5 +58,26 @@ async function runCheckProcess(inputValue) {
   }
 }
 
-runCheckProcess(5);
-runCheckProcess(4);
+// runCheckProcess(5);
+// runCheckProcess(4);
+
+async function runCheckProcessMulti(inputValues) {
+  const ul = document.createElement('ul');
+
+  const promises = inputValues.map(inputValue => checkOdd(inputValue));
+  const results = await Promise.allSettled(promises);
+  results.forEach(result => {
+    const li = document.createElement('li');
+    const isSuccess = result.status === 'fulfilled';
+    li.textContent = isSuccess ? `${result.value}: 성공` : `${result.reason}: 실패`;
+    li.style.color = isSuccess ? 'green' : 'red';
+    console.log(li.textContent);
+    ul.appendChild(li);
+  });
+
+  app.appendChild(ul);
+}
+
+const app = document.querySelector('#app');
+
+runCheckProcessMulti([1, 2, 3, 4, 5]);
