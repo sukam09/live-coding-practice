@@ -62,22 +62,28 @@ async function runCheckProcess(inputValue) {
 // runCheckProcess(4);
 
 async function runCheckProcessMulti(inputValues) {
-  const ul = document.createElement('ul');
+  app.innerHTML = '<h1>로딩 중...</h1>';
 
-  const promises = inputValues.map(inputValue => checkOdd(inputValue));
-  const results = await Promise.allSettled(promises);
-  results.forEach(result => {
-    const li = document.createElement('li');
-    const isSuccess = result.status === 'fulfilled';
-    li.textContent = isSuccess ? `${result.value}: 성공` : `${result.reason}: 실패`;
-    li.style.color = isSuccess ? 'green' : 'red';
-    console.log(li.textContent);
-    ul.appendChild(li);
-  });
+  try {
+    const promises = inputValues.map(inputValue => checkOdd(inputValue));
+    const results = await Promise.allSettled(promises);
+    const ul = document.createElement('ul');
 
-  app.appendChild(ul);
+    results.forEach(result => {
+      const li = document.createElement('li');
+      const isSuccess = result.status === 'fulfilled';
+      li.textContent = isSuccess ? `${result.value}: 성공` : `${result.reason}: 실패`;
+      li.style.color = isSuccess ? 'green' : 'red';
+      console.log(li.textContent);
+      ul.appendChild(li);
+    });
+
+    app.innerHTML = '';
+    app.appendChild(ul);
+  } catch (error) {
+    app.innerHTML = `<p style="color: orange">데이터를 불러오는 중 문제가 발생했습니다.</p>`;
+  }
 }
 
 const app = document.querySelector('#app');
-
 runCheckProcessMulti([1, 2, 3, 4, 5]);
