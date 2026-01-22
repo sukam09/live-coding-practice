@@ -13,6 +13,18 @@ function checkOdd(number) {
   });
 }
 
+// 데이터 가공 로직
+async function fetchOddResults(values) {
+  const promises = values.map(value => checkOdd(value));
+  const results = await Promise.allSettled(promises);
+  return results.map((result, index) => {
+    const isOdd = result.status === 'fulfilled';
+    const number = isOdd ? result.value : result.reason;
+    const message = isOdd ? '성공' : '실패';
+    return { id: index + 1, text: `${number}: ${message}`, isOdd };
+  });
+}
+
 const inputValues = [1, 2, 3, 4, 5];
 
 export default function App() {
@@ -20,33 +32,30 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const hasError = errorMessage !== '';
-
   useEffect(() => {
-    async function fetchResults(values) {
-      const promises = values.map(value => checkOdd(value));
-      const results = await Promise.allSettled(promises);
-      return results.map((result, index) => {
-        const isOdd = result.status === 'fulfilled';
-        const number = isOdd ? result.value : result.reason;
-        const message = isOdd ? '성공' : '실패';
-        return { id: index + 1, text: `${number}: ${message}`, isOdd };
-      });
-    }
-
-    fetchResults(inputValues)
-      .then(results => {
-        setResults(results);
-      })
-      .catch(error => {
+    const loadData = async () => {
+      try {
+        const data = await fetchOddResults(inputValues);
+        setResults(data);
+      } catch (error) {
         setErrorMessage(error.message || '알 수 없는 에러가 발생했습니다.');
-      })
-      .finally(() => {
+      } finally {
         setIsLoading(false);
-      });
+      }
+    };
+
+    loadData();
   }, []);
 
-  return <>{isLoading ? <Loading /> : hasError ? <Error errorMessage={errorMessage} /> : <List results={results} />}</>;
+  if (isLoading) {
+    return <Loading />;
+  }
+
+  if (errorMessage) {
+    return <Error errorMessage={errorMessage} />;
+  }
+
+  return <List results={results} />;
 }
 
 function Loading() {
