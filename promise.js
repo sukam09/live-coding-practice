@@ -78,12 +78,61 @@ async function runCheckProcessMulti(inputValues) {
       ul.appendChild(li);
     });
 
-    app.innerHTML = '';
-    app.appendChild(ul);
+    app.replaceChildren(ul);
   } catch (error) {
     app.innerHTML = `<p style="color: orange">데이터를 불러오는 중 문제가 발생했습니다.</p>`;
   }
 }
 
-const app = document.querySelector('#app');
-runCheckProcessMulti([1, 2, 3, 4, 5]);
+async function fetchResults(values) {
+  const promises = values.map(value => checkOdd(value));
+  const results = await Promise.allSettled(promises);
+  return results.map((result, index) => {
+    const isOdd = result.status === 'fulfilled';
+    const number = isOdd ? result.value : result.reason;
+    const message = isOdd ? '성공' : '실패';
+    return { id: index + 1, text: `${number}: ${message}`, isOdd };
+  });
+}
+
+function renderList(container, results) {
+  const ul = document.createElement('ul');
+
+  results.forEach(result => {
+    const li = document.createElement('li');
+    li.textContent = result.text;
+    li.style.color = result.isOdd ? 'green' : 'red';
+    ul.appendChild(li);
+  });
+
+  container.replaceChildren(ul);
+}
+
+function renderError(container, message) {
+  const p = document.createElement('p');
+  p.textContent = message;
+  p.style.color = 'orange';
+  container.replaceChildren(p);
+}
+
+async function initApp(inputValues) {
+  const app = document.querySelector('#app');
+  app.innerHTML = '<h1>로딩 중...</h1>';
+
+  try {
+    const results = await fetchResults(inputValues);
+    renderList(app, results);
+  } catch (error) {
+    renderError(app, error.message || '알 수 없는 에러가 발생했습니다.');
+  }
+}
+
+initApp([1, 2, 3, 4, 5]);
+
+// const app = document.querySelector('#app');
+// app.innerHTML = '<h1>로딩 중...</h1>';
+// runCheckProcessMulti([1, 2, 3, 4, 5]);
+
+// fetchResults([1, 2, 3, 4, 5])
+//   .then(results => renderList(results))
+//   .catch(error => console.error(error));
