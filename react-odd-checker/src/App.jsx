@@ -29,11 +29,11 @@ function checkOdd(number) {
 async function fetchOddResults(values) {
   const promises = values.map(value => checkOdd(value));
   const results = await Promise.allSettled(promises);
-  return results.map((result, index) => {
+  return results.map(result => {
     const isOdd = result.status === 'fulfilled';
     const number = isOdd ? result.value : result.reason;
     const message = isOdd ? '성공' : '실패';
-    return { id: Date.now() + index, text: `${number}: ${message}`, isOdd };
+    return { id: crypto.randomUUID(), text: `${number}: ${message}`, isOdd };
   });
 }
 
@@ -50,9 +50,9 @@ export default function App() {
       setIsAdding(true);
       const randomNumber = Math.floor(Math.random() * 10) + 1;
       const number = await checkOdd(randomNumber);
-      setResults(prev => [...prev, { id: Date.now(), text: `${number}: 성공`, isOdd: true }]);
+      setResults(prev => [...prev, { id: crypto.randomUUID(), text: `${number}: 성공`, isOdd: true }]);
     } catch (failedNumber) {
-      setResults(prev => [...prev, { id: Date.now(), text: `${failedNumber}: 실패`, isOdd: false }]);
+      setResults(prev => [...prev, { id: crypto.randomUUID(), text: `${failedNumber}: 실패`, isOdd: false }]);
     } finally {
       setIsAdding(false);
     }
