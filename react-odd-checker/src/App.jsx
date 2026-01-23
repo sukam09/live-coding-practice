@@ -33,21 +33,35 @@ async function fetchOddResults(values) {
     const isOdd = result.status === 'fulfilled';
     const number = isOdd ? result.value : result.reason;
     const message = isOdd ? '성공' : '실패';
-    return { id: index + 1, text: `${number}: ${message}`, isOdd };
+    return { id: Date.now() + index, text: `${number}: ${message}`, isOdd };
   });
 }
 
-const inputValues = [1, 2, 3, 4, 5];
+const defaultInputValues = [1, 2, 3, 4, 5];
 
 export default function App() {
   const [results, setResults] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
+  const [isAdding, setIsAdding] = useState(false);
+
+  async function handleAdd() {
+    try {
+      setIsAdding(true);
+      const randomNumber = Math.floor(Math.random() * 10) + 1;
+      const number = await checkOdd(randomNumber);
+      setResults(prev => [...prev, { id: Date.now(), text: `${number}: 성공`, isOdd: true }]);
+    } catch (failedNumber) {
+      setResults(prev => [...prev, { id: Date.now(), text: `${failedNumber}: 실패`, isOdd: false }]);
+    } finally {
+      setIsAdding(false);
+    }
+  }
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const data = await fetchOddResults(inputValues);
+        const data = await fetchOddResults(defaultInputValues);
         setResults(data);
       } catch (error) {
         setErrorMessage(error.message || '알 수 없는 에러가 발생했습니다.');
@@ -67,7 +81,12 @@ export default function App() {
     return <Error message={errorMessage} />;
   }
 
-  return <List results={results} />;
+  return (
+    <>
+      <AddButton onClick={handleAdd} isAdding={isAdding} />
+      <List results={results} />
+    </>
+  );
 }
 
 function Loading() {
@@ -89,5 +108,13 @@ function List({ results }) {
         </li>
       ))}
     </ul>
+  );
+}
+
+function AddButton({ onClick, isAdding }) {
+  return (
+    <button onClick={onClick} disabled={isAdding}>
+      숫자 추가
+    </button>
   );
 }
